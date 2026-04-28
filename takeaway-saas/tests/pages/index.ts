@@ -1,0 +1,5 @@
+export { BasePage } from './base.page'
+export { MenuPage } from './menu.page'
+export { CartPage } from './cart.page'
+export { CheckoutPage } from './checkout.page'
+export { ConfirmationPage } from './confirmation.page'

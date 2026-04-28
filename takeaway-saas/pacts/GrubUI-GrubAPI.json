@@ -1,0 +1,637 @@
+{
+  "consumer": {
+    "name": "GrubUI"
+  },
+  "interactions": [
+    {
+      "description": "a payment request with a declined card",
+      "providerStates": [
+        {
+          "name": "payment gateway is available"
+        }
+      ],
+      "request": {
+        "body": {
+          "orderId": "ORD-PACTDECLINE",
+          "payment": {
+            "cardNumber": "4000000000000002",
+            "cardholderName": "Jane Smith",
+            "cvv": "123",
+            "expiryDate": "12/30"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/payment"
+      },
+      "response": {
+        "body": {
+          "error": "Card declined by issuer",
+          "success": false
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.error": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.success": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 402
+      }
+    },
+    {
+      "description": "a payment request without an orderId",
+      "providerStates": [
+        {
+          "name": "payment gateway is available"
+        }
+      ],
+      "request": {
+        "body": {
+          "payment": {
+            "cardNumber": "4242424242424242",
+            "cardholderName": "Jane Smith",
+            "cvv": "123",
+            "expiryDate": "12/30"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/payment"
+      },
+      "response": {
+        "body": {
+          "error": "Order ID is required"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.error": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 400
+      }
+    },
+    {
+      "description": "a request for all menu items",
+      "providerStates": [
+        {
+          "name": "menu items exist"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/api/menu"
+      },
+      "response": {
+        "body": {
+          "items": [
+            {
+              "available": true,
+              "category": "mains",
+              "description": "Tender chicken in rich tomato-butter gravy, served with naan",
+              "id": "M001",
+              "imageEmoji": "🍛",
+              "imageUrl": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&h=300&fit=crop",
+              "name": "Butter Chicken",
+              "price": 280
+            }
+          ],
+          "total": 1
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.items": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$.items[*]": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].available": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].category": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].description": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].imageEmoji": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].imageUrl": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].name": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].price": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.total": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a request for mains only",
+      "providerStates": [
+        {
+          "name": "menu items exist"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/api/menu",
+        "query": {
+          "category": [
+            "mains"
+          ]
+        }
+      },
+      "response": {
+        "body": {
+          "items": [
+            {
+              "available": true,
+              "category": "mains",
+              "description": "Tender chicken in rich tomato-butter gravy, served with naan",
+              "id": "M001",
+              "imageEmoji": "🍛",
+              "imageUrl": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&h=300&fit=crop",
+              "name": "Butter Chicken",
+              "price": 280
+            }
+          ],
+          "total": 1
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.items": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type",
+                  "min": 1
+                }
+              ]
+            },
+            "$.items[*]": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                },
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].available": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].category": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].description": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].imageEmoji": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].imageUrl": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].name": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.items[*].price": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.total": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "a valid order creation request",
+      "providerStates": [
+        {
+          "name": "order can be created"
+        }
+      ],
+      "request": {
+        "body": {
+          "customerAddress": "123 Main St, London, W1A 1AA",
+          "customerEmail": "jane@example.com",
+          "customerName": "Jane Smith",
+          "items": [
+            {
+              "menuItem": {
+                "available": true,
+                "category": "mains",
+                "description": "Tender chicken in rich tomato-butter gravy",
+                "id": "M001",
+                "imageEmoji": "🍛",
+                "name": "Butter Chicken",
+                "price": 280
+              },
+              "quantity": 1
+            }
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "order": {
+            "createdAt": "2024-01-01T00:00:00.000Z",
+            "customerEmail": "jane@example.com",
+            "customerName": "Jane Smith",
+            "deliveryFee": 40,
+            "id": "ORD-ABCD1234",
+            "status": "confirmed",
+            "subtotal": 280,
+            "tax": 14,
+            "total": 334
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.order": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.order.createdAt": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.order.customerEmail": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.order.customerName": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.order.deliveryFee": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.order.id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "regex",
+                  "regex": "^ORD-[A-Z0-9]+$"
+                }
+              ]
+            },
+            "$.order.status": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.order.subtotal": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.order.tax": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.order.total": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            }
+          }
+        },
+        "status": 201
+      }
+    },
+    {
+      "description": "a valid payment request",
+      "providerStates": [
+        {
+          "name": "payment gateway is available"
+        }
+      ],
+      "request": {
+        "body": {
+          "orderId": "ORD-PACTTEST",
+          "payment": {
+            "cardNumber": "4242424242424242",
+            "cardholderName": "Jane Smith",
+            "cvv": "123",
+            "expiryDate": "12/30"
+          }
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/payment"
+      },
+      "response": {
+        "body": {
+          "orderId": "ORD-PACTTEST",
+          "success": true,
+          "transactionId": "TXN-ABCD1234"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.orderId": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.success": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.transactionId": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "regex",
+                  "regex": "^TXN-[A-Z0-9]+$"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      }
+    },
+    {
+      "description": "an order request with missing customer name",
+      "providerStates": [
+        {
+          "name": "order validation is active"
+        }
+      ],
+      "request": {
+        "body": {
+          "customerAddress": "123 Main St",
+          "customerEmail": "jane@example.com",
+          "customerName": "",
+          "items": [
+            {
+              "menuItem": {
+                "available": true,
+                "category": "mains",
+                "description": "Tender chicken in rich tomato-butter gravy",
+                "id": "M001",
+                "imageEmoji": "🍛",
+                "name": "Butter Chicken",
+                "price": 280
+              },
+              "quantity": 1
+            }
+          ]
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "method": "POST",
+        "path": "/api/orders"
+      },
+      "response": {
+        "body": {
+          "error": "Customer name is required"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "matchingRules": {
+          "body": {
+            "$.error": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            }
+          }
+        },
+        "status": 400
+      }
+    }
+  ],
+  "metadata": {
+    "pact-js": {
+      "version": "16.3.0"
+    },
+    "pactRust": {
+      "ffi": "0.5.3",
+      "models": "1.3.9"
+    },
+    "pactSpecification": {
+      "version": "3.0.0"
+    }
+  },
+  "provider": {
+    "name": "GrubAPI"
+  }
+}
