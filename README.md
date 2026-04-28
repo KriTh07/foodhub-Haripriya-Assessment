@@ -1,4 +1,4 @@
-# 🍔 Grub — Takeaway SaaS
+# 🍔 Grub — A Takeaway SaaS application
 
 > **Quality Engineering Leadership Assessment**
 > Built by **Haripriya Muthukrishnan** who believes quality is an engineering discipline, not a phase.
@@ -74,7 +74,6 @@ tests/
 │   ├── critical-ui.spec.ts   # 13 highest-risk journeys, data-driven, severity-tagged
 │   ├── regression.spec.ts    # Edge cases, boundary conditions, known risk areas
 │   ├── accessibility.spec.ts # WCAG 2.1 AA compliance tests (axe-core)
-│   └── pom-example.spec.ts   # Page Object Model examples
 ├── pages/                    # Playwright Page Object Model (POM)
 │   ├── base.page.ts          # Base page with common methods
 │   ├── menu.page.ts          # Menu page interactions
@@ -112,7 +111,9 @@ package.json                 # Dependencies and test scripts
 
 ---
 
-## Commands Deploy Application 
+## Commandline References
+
+### Commands to deploy/start the application
 
 ```bash
 npm install
@@ -137,7 +138,7 @@ npm run test:all           # Local equivalent to full pipeline
 ```
 
 ### Test Reporting
-# Allure reporting (requires `npm install -g allure-commandline`)
+#### Allure reporting (requires `npm install -g allure-commandline`)
 ```bash
 # Install Allure CLI (one-time)
 npm install -g allure-commandline
