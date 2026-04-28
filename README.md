@@ -1,7 +1,7 @@
 # 🍔 Grub — Takeaway SaaS
 
 > **Quality Engineering Leadership Assessment**
-> Built by a QE leader who believes quality is an engineering discipline, not a department.
+> Built by **Haripriya Muthukrishnan** who believes quality is an engineering discipline, not a phase.
 
 This is a takeaway ordering system built to demonstrate how I think about quality — not just how I write tests. The application itself is intentionally simple. What I want you to evaluate is the **architecture of confidence**: how every layer of the system is designed so that a change anywhere surfaces a failure somewhere specific, fast, and actionable.
 
@@ -20,46 +20,6 @@ A customer can browse a menu, add items to a cart, check out with delivery detai
 | Checkout | Delivery details + mock payment with deterministic test-card scenarios |
 | Confirmation | Unique `ORD-` order ID, `TXN-` transaction ID, delivery address, total paid |
 
-**Test cards:**
-
-| Number | Outcome |
-|---|---|
-| `4242 4242 4242 4242` | Payment succeeds |
-| `4000 0000 0000 0002` | Card declined by issuer |
-| `4000 0000 0000 9995` | Insufficient funds |
-| Any past expiry date | Card expired |
-
----
-
-## Getting Started
-
-```bash
-npm install
-npm run dev        # http://localhost:3000
-```
-
-**Run the tests:**
-
-```bash
-npm run test:unit          # 47 unit tests — pure functions, ~3s
-npm run test:integration   # 15 integration tests — API handlers, ~5s
-npm run test:contract      # 7 Pact consumer contract tests
-npm test                   # Unit + integration together
-
-npm run test:e2e           # Full Playwright suite — all browsers
-npm run test:e2e:smoke     # Critical path only (@smoke)
-npm run test:e2e:a11y      # Accessibility tests (WCAG 2.1 AA)
-npm run test:e2e:ui        # Playwright UI mode for local debugging
-
-npm run test:all           # Everything
-
-# Allure reporting (requires `npm install -g allure-commandline`)
-npm run allure:generate    # Build unified report from all results
-npm run allure:open        # Open in browser
-npm run allure:serve       # Live serve
-```
-
-**Set `PAYMENT_DELAY_MS=0` in your test environment** to eliminate the simulated 800ms payment processing delay from API and integration test runs.
 
 ## Technology Stack
 
@@ -141,47 +101,43 @@ package.json                 # Dependencies and test scripts
 ```
 
 ---
+**Test cards:**
 
-## Running Tests
+| Number | Outcome |
+|---|---|
+| `4242 4242 4242 4242` | Payment succeeds |
+| `4000 0000 0000 0002` | Card declined by issuer |
+| `4000 0000 0000 9995` | Insufficient funds |
+| Any past expiry date | Card expired |
 
-### Local Development
+---
+
+## Commands Deploy Application 
 
 ```bash
-npm run dev                   # Start app at http://localhost:3000
-
-# In another terminal:
-npm run test:unit            # Unit tests (pure functions) — ~3s
-npm run test:integration     # Integration tests (API handlers) — ~5s
-npm run test:contract        # Contract tests (Pact) — ~10s
-npm run test                 # Unit + Integration combined — ~8s
-npm run test:api             # API tests (live server) — ~30s
-npm run test:e2e             # E2E tests (all browsers) — ~5 min
-npm run test:e2e:smoke       # E2E smoke tests (@smoke tag) — ~2 min
-npm run test:e2e:a11y        # Accessibility tests (WCAG 2.1 AA) — ~1 min
-npm run test:e2e:ui          # E2E with Playwright UI (interactive debugging)
-npm run test:all             # Everything (full suite) — ~10 min
+npm install
+npm run dev        # Start app at http://localhost:3000
 ```
 
-### CI/CD Pipeline (GitHub Actions)
+### Commands for Running Tests
 
-The pipeline (`ci.yml`) ensures the app is **deployed first**, then all tests run:
-
-1. **Unit & Integration Tests** → Run on code checkout
-2. **Build Artifact** → Build production bundle
-3. **Deploy App** → Start server (both for API tests and E2E)
-4. **Run All Tests** → Only after deployment succeeds
-   - API tests against deployed server
-   - Contract verification
-   - E2E tests (Chrome, Firefox, Mobile)
-5. **Generate Reports** → Allure unified report
-6. **Publish to GitHub Pages** → On main branch only
 
 ```bash
-npm run test:all             # Local equivalent to full pipeline
+npm run test:unit          # 47 unit tests — pure functions, ~3s
+npm run test:integration   # 15 integration tests — API handlers, ~5s
+npm run test:contract      # 7 Pact consumer contract tests
+npm test                   # Unit + integration together
+
+npm run test:e2e           # Full Playwright suite — all browsers
+npm run test:e2e:smoke     # Critical path only (@smoke)
+npm run test:e2e:a11y      # Accessibility tests (WCAG 2.1 AA)
+npm run test:e2e:ui        # Playwright UI mode for local debugging
+
+npm run test:all           # Local equivalent to full pipeline
 ```
 
 ### Test Reporting
-
+# Allure reporting (requires `npm install -g allure-commandline`)
 ```bash
 # Install Allure CLI (one-time)
 npm install -g allure-commandline
@@ -193,11 +149,13 @@ npm run allure:open          # Open report in default browser
 npm run allure:serve         # Serve report with live updates
 ```
 
+**Set `PAYMENT_DELAY_MS=0` in your test environment** to eliminate the simulated 800ms payment processing delay from API and integration test runs.
+
+
 ---
 
 
-
-I started with a question most engineers skip: **what would make this system easy to test at every layer?**
+Application has been developed keeping in mind: **what would make this system easy to test at every layer?**
 
 ### Design for Testability
 
@@ -315,6 +273,20 @@ Playwright captures on every CI failure:
 ---
 
 ## CI/CD Pipeline
+
+### CI/CD Pipeline Overview(GitHub Actions)
+
+The pipeline (`ci.yml`) ensures the app is **deployed first**, then all tests run:
+
+1. **Unit & Integration Tests** → Run on code checkout
+2. **Build Artifact** → Build production bundle
+3. **Deploy App** → Start server (both for API tests and E2E)
+4. **Run All Tests** → Only after deployment succeeds
+   - API tests against deployed server
+   - Contract verification
+   - E2E tests (Chrome, Firefox, Mobile)
+5. **Generate Reports** → Allure unified report
+6. **Publish to GitHub Pages** → On main branch only
 
 ```
 Push / PR
