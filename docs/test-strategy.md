@@ -75,7 +75,7 @@ The browser tests cover the complete customer journey end to end:
 These are hard blockers — the system should not take real orders without them:
 
 1. **A real database** — orders must survive server restarts
-2. **A real payment gateway** (e.g. Stripe) — the current processor is a simulation
+2. **A real payment gateway** (e.g. Stripe/RazorPay) — the current processor is a simulation
 3. **Rate limiting** on the payment endpoint
 4. **Email order confirmations** — customers need a receipt
 5. **HTTPS** — all traffic must be encrypted
