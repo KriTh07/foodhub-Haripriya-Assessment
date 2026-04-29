@@ -282,6 +282,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-and-integration, api-tests, e2e]
     if: always()
+    permissions:
+      contents: write   # ← required for gh-pages push
+      pages: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
