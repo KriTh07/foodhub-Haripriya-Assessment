@@ -193,13 +193,7 @@ export default function App() {
                 const qty = getQty(item.id)
                 return (
                   <div key={item.id} className={`${styles.menuCard} ${!item.available ? styles.unavailable : ''} fade-up`} style={{ animationDelay: `${idx * 0.05}s` }} data-testid={`menu-item-${item.id}`}>
-                    {item.imageUrl ? (
-                      <div className={styles.cardImage}>
-                        <img src={item.imageUrl} alt={item.name} loading="lazy" />
-                      </div>
-                    ) : (
                       <div className={styles.cardEmoji}>{item.imageEmoji}</div>
-                    )}
                     <div className={styles.cardBody}>
                       <div className={styles.cardTop}>
                         <h2 className={styles.cardName}>{item.name}</h2>
