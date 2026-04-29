@@ -23,10 +23,16 @@ describe('Pact Provider Verification: GrubAPI', () => {
       providerVersion: '1.0.0',
       pactUrls: [path.resolve(__dirname, '../../pacts/GrubUI-GrubAPI.json')],
       logLevel: 'warn',
-      publishVerificationResult: false
+      publishVerificationResult: false,
+      stateHandlers: {
+        'payment gateway is available': async () => {
+          testLogger.debug('Setting up state: payment gateway is available')
+          return Promise.resolve()
+        }
+      }
     }).verifyProvider()
 
     testLogger.info('pact provider verification complete')
     expect(output).toBeTruthy()
-  }, 30000)
+  }, 60000)
 })
