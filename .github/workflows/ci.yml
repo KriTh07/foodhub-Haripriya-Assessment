@@ -324,17 +324,8 @@ jobs:
 
       - name: Publish Allure report to GitHub Pages
         if: github.ref == 'refs/heads/main'
-        run: |
-          rm -rf gh-pages
-          git clone https://github.com/${{ github.repository }} gh-pages
-
-          cd gh-pages
-          rm -rf *
-          cp -r ../allure-report/* .
-
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
-          git add .
-          git commit -m "Update Allure report" || echo "No changes"
-          git push origin gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-report
