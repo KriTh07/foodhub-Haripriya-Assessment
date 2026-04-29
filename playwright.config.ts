@@ -75,7 +75,9 @@ export default defineConfig({
     return true
   }),
 
-  webServer: {
+  webServer: process.env.CI
+  ? undefined // Assume server is already running in CI
+  : {
     command: 'npm run dev',
     url: baseUrl,
     reuseExistingServer: !process.env.CI,
