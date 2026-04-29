@@ -295,15 +295,25 @@ jobs:
         with:
           pattern: allure-results-*
           path: allure-results-combined/
-          #merge-multiple: true
-
-      - name: Generate Allure report (combine + build)
+          merge-multiple: true          
+      - name: Restore Allure history
         run: |
-          npm install --save-dev allure-combine
-          npx allure-combine \
-            --results allure-results-combined \
-            --report allure-report \
-            --clean    
+            git clone --branch gh-pages https://github.com/${{ github.repository }} gh-pages || true
+            mkdir -p allure-history
+
+            if [ -d "gh-pages/history" ]; then
+              cp -r gh-pages/history allure-history
+            else
+              echo "No previous history found (first run)"
+            fi
+            
+      - name: Generate Allure report
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: allure-results-combined
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 20
 
       - name: Upload Allure report artifact
         uses: actions/upload-artifact@v4
@@ -314,8 +324,17 @@ jobs:
 
       - name: Publish Allure report to GitHub Pages
         if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: allure-report
+        run: |
+          rm -rf gh-pages
+          git clone https://github.com/${{ github.repository }} gh-pages
+
+          cd gh-pages
+          rm -rf *
+          cp -r ../allure-report/* .
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add .
+          git commit -m "Update Allure report" || echo "No changes"
+          git push origin gh-pages
