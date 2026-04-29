@@ -302,11 +302,11 @@ jobs:
             mkdir -p allure-history
 
             if [ -d "gh-pages/history" ]; then
-              cp -r gh-pages/history allure-history
+              cp -r gh-pages/history allure-history/
             else
               echo "No previous history found (first run)"
             fi
-            
+
       - name: Generate Allure report
         uses: simple-elf/allure-report-action@master
         with:
