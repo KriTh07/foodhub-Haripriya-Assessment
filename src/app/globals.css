@@ -3,10 +3,10 @@
   --surface: #1a1a1a;
   --surface-2: #242424;
   --border: #2e2e2e;
-  --accent: #f5a623;
+  --accent: #ffd166;
   --accent-dim: #f5a62330;
   --text: #f0ece4;
-  --text-muted: #888;
+  --text-muted: rgba(255, 255, 255, 0.78);
   --success: #4ade80;
   --error: #f87171;
   --radius: 12px;

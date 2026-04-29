@@ -1,11 +1,11 @@
 # 🍔 Grub — A Takeaway SaaS application
 
 > **Quality Engineering Leadership Assessment**
-> Built by **Haripriya Muthukrishnan** who believes quality is an engineering discipline, not a phase.
+> Built by **Haripriya Muthukrishnan** - Quality Engineering Leader focused on building reliable, testable systems and high-signal automation.
 
-This is a takeaway ordering system built to demonstrate how I think about quality — not just how I write tests. The application itself is intentionally simple. What I want you to evaluate is the **architecture of confidence**: how every layer of the system is designed so that a change anywhere surfaces a failure somewhere specific, fast, and actionable.
+This repository contains a simple takeaway ordering SaaS built to demonstrate my approach to engineering quality into the system, not just testing it after development. The application is intentionally minimal; the focus is on how the architecture enables fast feedback, layered confidence, and actionable failures across unit, integration, API, accessibility, and E2E test layers.
 
-If you read nothing else, read the [Test Strategy](#test-strategy), [Key Decisions](#key-decisions), and [What Is Missing](#what-is-missing-and-why-it-is-not-here) sections. That is where the thinking lives.
+For the quickest review, please read the [Test Strategy](#test-strategy), [Key Decisions](#key-decisions), and [What Is Missing](#what-is-missing-and-why-it-is-not-here) sections. 
 
 ---
 
@@ -32,7 +32,6 @@ A customer can browse a menu, add items to a cart, check out with delivery detai
 - **Jest 29.7.0** — Unit & Integration tests
 - **Playwright 1.44.0** — E2E browser automation (Chrome, Firefox, Safari, Mobile)
 - **Supertest 7.2.0** — HTTP API testing
-- **Pact 16.3.0** — Contract testing (consumer-driven)
 - **Allure Reports** — Test reporting and analytics
 - **axe-core 4.11.2** — Accessibility (WCAG 2.1 AA) testing
 - **Pino 10.3.1** — Structured logging
@@ -68,7 +67,6 @@ tests/
 ├── unit/                     # Pure function tests (Jest, no DOM, no network)
 ├── integration/              # API handler tests (Jest, handlers imported directly)
 ├── api/                      # HTTP-level tests (Supertest, live server)
-├── contract/                 # Pact consumer + provider verification
 ├── e2e/
 │   ├── app.spec.ts           # Full behavioural suite (Playwright)
 │   ├── critical-ui.spec.ts   # 13 highest-risk journeys, data-driven, severity-tagged
@@ -93,7 +91,7 @@ docs/
 
 .env.test                     # Test environment variables
 
-jest.config.js               # Jest configuration (unit + integration + contract tests)
+jest.config.js               # Jest configuration (unit + integration)
 playwright.config.ts         # Playwright configuration (E2E tests)
 tsconfig.json                # TypeScript configuration
 package.json                 # Dependencies and test scripts
@@ -126,7 +124,6 @@ npm run dev        # Start app at http://localhost:3000
 ```bash
 npm run test:unit          # 47 unit tests — pure functions, ~3s
 npm run test:integration   # 15 integration tests — API handlers, ~5s
-npm run test:contract      # 7 Pact consumer contract tests
 npm test                   # Unit + integration together
 
 npm run test:e2e           # Full Playwright suite — all browsers
@@ -155,7 +152,6 @@ npm run allure:serve         # Serve report with live updates
 
 ---
 
-
 Application has been developed keeping in mind: **what would make this system easy to test at every layer?**
 
 ### Design for Testability
@@ -176,19 +172,17 @@ Application has been developed keeping in mind: **what would make this system ea
 
 ## Test Strategy
 
-The suite is built in five layers. Each layer has a different cost, speed, and confidence trade-off. The key principle is that **every layer catches something the others cannot**.
+The suite is built in four layers. Each layer has a different cost, speed, and confidence trade-off. The key principle is that **every layer catches something the others cannot**.
 
 ```
               ┌──────────────────────────────────────────┐
               │  E2E — Playwright                         │
               │  Real browsers: Chrome, Firefox, Mobile   │  ~5 min
-              │  app.spec.ts / critical-ui / regression   │
+              │  app.spec.ts / critical-ui / regression / |
+              │  accessibility                            |
               ├──────────────────────────────────────────┤
               │  API Tests — Supertest                    │
               │  Full HTTP stack, live server             │  ~30s
-              ├──────────────────────────────────────────┤
-              │  Contract Tests — Pact                    │
-              │  Consumer/provider agreement              │  ~10s
               ├──────────────────────────────────────────┤
               │  Integration Tests — Jest                 │
               │  Handlers imported directly, no server   │  ~5s
@@ -197,7 +191,6 @@ The suite is built in five layers. Each layer has a different cost, speed, and c
               │  Pure functions, zero dependencies       │  ~3s
               └──────────────────────────────────────────┘
 ```
-
 ### Layer 1 — Unit Tests (`tests/unit/`)
 
 **47 tests.** Pure functions in complete isolation. No DOM, no network, no framework.
@@ -215,27 +208,19 @@ These are the first gate in CI. If they fail, nothing else runs.
 
 This layer catches validation logic errors, wrong HTTP status codes, and malformed response shapes. It runs at unit-test speed because there is no server startup cost.
 
-### Layer 3 — Contract Tests (`tests/contract/`)
-
-**7 consumer interactions + provider verification.** This is the layer most teams skip and the one that catches the most insidious class of bug: **the UI and API each pass their own tests but disagree on the contract**.
-
-The consumer tests define exactly what the UI expects from each endpoint. Pact generates a pact file in `/pacts/`. The provider verification test runs against the live server and confirms it honours every interaction in that file.
-
-If someone changes the `order.id` field to `order.orderId` in the API response, the provider verification fails immediately — before any E2E test runs, before any customer sees a broken confirmation page.
-
-### Layer 4 — API Tests (`tests/api/`)
+### Layer 3 — API Tests (`tests/api/`)
 
 **17 tests** via Supertest against a real running Next.js server. This layer catches what handler-import tests cannot: routing configuration, middleware execution, HTTP serialisation, and response headers.
 
-### Layer 5 — E2E Tests (`tests/e2e/`)
+### Layer 4 — E2E Tests (`tests/e2e/`)
 
 Four files with distinct, non-overlapping purposes:
 
 **`app.spec.ts`** — full behavioural coverage of every user-facing feature across the complete flow.
 
-**`critical-ui.spec.ts`** — **25 tests** (13 unique + 13 data-driven menu item tests) on the highest-risk journeys, each with an explicit severity level (`blocker` or `critical`) and Allure annotations. Critically, CUI-02 is **data-driven**: each of the 13 menu items gets its own independent test. When a price changes, the failure message is `CUI-02 [M003]: Grilled Salmon renders with price £18.99` — not a cryptic assertion inside a loop.
+**`critical-ui.spec.ts`** — **25 tests** (13 unique + 13 data-driven menu item tests) on the highest-risk journeys, each with an explicit severity level (`blocker` or `critical`) and Allure annotations. Critically, CUI-02 is **data-driven**: each of the 13 menu items gets its own independent test. 
 
-**`regression.spec.ts`** — **12 tests** covering edge cases and boundary conditions: category filter reset, decrement-to-zero removes item, cart line total updates on increment, free delivery boundary (just below £30), empty cart state after removing all items, back-from-checkout preserves cart, all three delivery errors fire simultaneously, invalid email format, insufficient funds error message, decline-then-retry success, multi-category subtotal accuracy, Order Again session reset.
+**`regression.spec.ts`** — **12 tests** covering edge cases and boundary conditions: category filter reset, decrement-to-zero removes item, cart line total updates on increment, free delivery boundary (just below ₹500), empty cart state after removing all items, back-from-checkout preserves cart, all three delivery errors fire simultaneously, invalid email format, insufficient funds error message, decline-then-retry success, multi-category subtotal accuracy, Order Again session reset.
 
 **`accessibility.spec.ts`** — **10 tests** verifying WCAG 2.1 AA compliance using axe-core: no accessibility violations on all pages (menu, cart, checkout, confirmation), keyboard navigation functionality, color contrast standards, image alt text, form label associations, heading hierarchy, and accessible names for interactive elements.
 
@@ -284,8 +269,8 @@ The pipeline (`ci.yml`) ensures the app is **deployed first**, then all tests ru
 3. **Deploy App** → Start server (both for API tests and E2E)
 4. **Run All Tests** → Only after deployment succeeds
    - API tests against deployed server
-   - Contract verification
    - E2E tests (Chrome, Firefox, Mobile)
+   - Accessibility Tests
 5. **Generate Reports** → Allure unified report
 6. **Publish to GitHub Pages** → On main branch only
 
@@ -296,26 +281,22 @@ Push / PR
     │   Jest, coverage upload,         Runs in ~10s.
     │   Allure results upload
     │
-    ├── contract ──────────────────── Pact consumer tests.
-    │   Pact file uploaded             Runs independently — no server needed.
-    │   as artefact
-    │
     ├── quality ───────────────────── TypeScript + lint.
     │   tsc --noEmit                   Non-blocking lint.
     │   eslint
     │
     ├── api-tests ─────────────────── Needs: unit-and-integration.
-    │   Build → start server           Supertest + Pact provider verification.
+    │   Build → start server           
     │   wait-on → supertest            PAYMENT_DELAY_MS=0 for speed.
-    │   + pact provider verify
     │
     ├── e2e [chromium] ─┐
     ├── e2e [firefox]   ├──────────── Needs: unit-and-integration.
-    ├── e2e [mobile]   ─┘             Parallel matrix. Retries: 2 in CI.
+    ├── e2e [mobile]   ─┘             Runs sequentially in CI for deterministic stability. Retries: 2 in CI.
+    ├── accessibility 
     │   Playwright report +            Trace/screenshot/video on failure.
     │   Allure results uploaded
     │
-    ├── allure-report ─────────────── Needs: unit-and-integration, contract, e2e.
+    ├── allure-report ─────────────── Needs: unit-and-integration, e2e.
     │   Merges all results             Runs always (if: always()).
     │   Publishes to GitHub Pages      Main branch only.
     │
@@ -338,15 +319,24 @@ The pipeline is ordered by speed and risk. Fast, cheap tests gate slow, expensiv
 | **Deterministic payment mocking** | Card numbers trigger specific outcomes. No `jest.mock()`. Same cards work across all test layers. |
 | **Injected clock in `isCardExpired`** | No hidden dependency on system time. Tests pin a fixed date for precise boundary testing. |
 | **Injectable `PAYMENT_DELAY_MS`** | Set to `0` in tests to eliminate 800ms artificial wait. No code changes needed. |
-| **Pact contract testing** | Catches UI/API disagreement bugs that other layers miss. Critical as teams grow. |
+| **Event-driven triggers** | **The current pipeline is event-triggered.** PR opens → smoke tests run; merge to `main` → full regression; deploy to staging → API tests |
 | **Data-driven critical tests** | Each menu item gets its own test. Failures are immediately identifiable, not cryptic. |
 | **Structured logging from day one** | Domain-scoped child loggers. Environment-aware levels. Production-ready JSON output. |
+| **Page Object Model (POM) design pattern** | POM is implemented for all Playwright tests to improve readability, maintainability, and reusability. Each page (Menu, Cart, Checkout, Confirmation) is a class with methods like `addItemToCart()`, `proceedToCheckout()`, `fillDeliveryDetails()`. |
+| **Locators and actions are encapsulated** | Single Source of truth - any UI change requires updating one place instead of 20 test files. |
+
 
 ---
 
 ## What Is Missing and Why It Is Not Here
 
 I believe in being honest about gaps. These are the things I would add before this went to production, and the reason each one is not in this submission.
+
+### Parallel Execution
+Playwright E2E tests are configured to run with reduced parallelism in CI for deterministic stability and to avoid shared-state interference. In a real environment, tests can be parallelized once isolated test data and environment reset hooks are introduced.
+
+### Contract Testing Gaps
+Contract testing using **Pact** was explored as part of this assessment. However, since the current application is a single-repo monolith without a separately versioned consumer/provider API boundary, **Pact** is not enforced in this submission. In a real production SaaS setup with independently deployed services, **Pact** would be introduced as part of the CI/CD pipeline
 
 ### Security Testing Gaps
 
@@ -410,21 +400,16 @@ This document is written for product managers, engineering leadership, and stake
 
 **For this assessment, all test code and application code reside in a single repository.** In an ideal production scenario, I would structure this differently:
 
-- **Dev code + unit tests + contract tests + integration tests** → one repository (owned by the product engineering team)
+- **Dev code + unit tests + integration tests** → one repository (owned by the product engineering team)
 - **API tests + E2E tests + regression suite** → separate test framework repository (owned by the QE team)
 - **Both repositories feed into a single unified CI/CD pipeline** with shared Allure reporting and quality gates
 
 This separation keeps the product team's repository fast and focused while giving the QE team full ownership of the broader test infrastructure without coupling deployment cycles.
 
-**The current pipeline is not event-triggered.** In production I would implement:
+### CI/CD Improvements 
 
-- **Event-driven triggers**: PR opens → smoke tests run; merge to `main` → full regression; deploy to staging → contract verification + API tests
 - **Nightly regression runs** with full E2E coverage across all browsers and devices
 - **Parallel ephemeral test execution**: spin up isolated test agents (Docker containers or Kubernetes pods) for each test suite, run in parallel, tear down on completion — reducing total execution time from 15+ minutes to under 5 minutes
-
-**Test code improvements I would make:** -- this is now done
-
-- **Page Object Model (POM) design pattern** for all Playwright tests to improve readability, maintainability, and reusability. Each page (Menu, Cart, Checkout, Confirmation) would be a class with methods like `addItemToCart()`, `proceedToCheckout()`, `fillDeliveryDetails()`. Locators and actions are encapsulated, so a UI change requires updating one place instead of 20 test files.
 
 ---
 
@@ -447,7 +432,7 @@ Most teams start with E2E tests because they look like the real thing. However, 
 - Monthly 30-min test review: identify gaps, pick one to close
 
 **Week 7+: Add layers incrementally**
-- Integration tests → contract tests → regression suite
+- Integration tests → api tests → regression suite
 - Follow Test Pyramid Structure: unit tests build confidence, integration tests clarify boundaries, E2E becomes safety net
 - Don't introduce Pact to a team that's never written a unit test
 
@@ -457,7 +442,7 @@ Most teams start with E2E tests because they look like the real thing. However, 
 
 Amazon Q was used throughout this project as a reviewer and gap-finder:
 
-- Identifying the truncated E2E spec, missing contract tests, absent logging, and no API test layer
+- Identifying the truncated E2E spec, absent logging, and no API test layer
 - Generating edge cases for payment validation, cart quantity limits, and delivery threshold boundary conditions
 - Reviewing test structure and identifying missing suites (payment failures, accessibility, critical path separation)
 - Shaping the Playwright helper abstractions to reduce duplication

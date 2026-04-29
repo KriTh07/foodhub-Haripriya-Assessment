@@ -13,13 +13,12 @@ This is a plain-English summary of how we test the Grub ordering system, what we
 
 ## What We Are Testing
 
-We test the system at five levels, each catching a different type of problem.
+We test the system at four levels, each catching a different type of problem.
 
 | Level | What it checks | How fast |
 |---|---|---|
 | Unit tests | Maths and rules — price calculations, tax, delivery fee, payment validation | ~3 seconds |
 | Integration tests | Our API endpoints respond correctly to valid and invalid requests | ~5 seconds |
-| Contract tests | The website and the API agree on the same data format | ~10 seconds |
 | API tests | The full HTTP layer — routing, error codes, response shapes | ~30 seconds |
 | Browser tests | Real user journeys in Chrome, Firefox, and mobile Chrome | ~5 minutes |
 
@@ -39,7 +38,7 @@ The browser tests cover the complete customer journey end to end:
 
 ## What We Are Confident About
 
-- **Pricing is correct.** Every calculation — subtotal, 10% tax, £2.99 delivery fee, free delivery over £30 — is tested with exact values at the unit level and verified again in the browser.
+- **Pricing is correct.** Every calculation — subtotal, 5% GST, ₹40 delivery fee, free delivery over ₹500 — is tested with exact values at the unit level and verified again in the browser.
 - **Payment failures are handled safely.** A declined or invalid card never advances the customer to a confirmation screen. The error is shown and the customer can retry.
 - **The menu is accurate.** All 13 items are tested individually — if a price or name changes in the code without the test being updated, the test fails immediately.
 - **Form validation works.** Missing name, invalid email, missing address, short card number, wrong expiry format — all are caught before the order is submitted.
@@ -56,7 +55,7 @@ The browser tests cover the complete customer journey end to end:
 | Real payment processing | The current payment system is a simulation — no real money moves |
 | Order persistence | If the server restarts, all orders are lost |
 | Email confirmations | Customers receive no email record of their order |
-| Accessibility (automated) | We check ARIA labels manually but have no automated accessibility scan |
+| Contract Testing | Catches UI/API disagreement bugs that other layers miss. Critical as teams grow. |
 
 ---
 

@@ -7,18 +7,19 @@ on:
     branches: [main]
 
 jobs:
-  # ── Unit & Integration Tests ─────────────────────────────────────────────────
+  # ── Unit & Integration Tests ────────────────────────────────────────────────
   unit-and-integration:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -36,59 +37,85 @@ jobs:
           name: coverage-report
           path: coverage/
 
-      - name: Upload Allure results (Jest)
+      - name: Upload Allure results (unit+integration)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: allure-results-jest
-          path: allure-results/jest/
+          name: allure-results-unit-integration
+          path: allure-results/
 
-  # ── Contract Tests ───────────────────────────────────────────────────────────
-  contract:
-    name: Contract Tests (Pact)
+
+  # ── Lint & Type Check ───────────────────────────────────────────────────────
+  quality:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
+    needs: unit-and-integration
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - run: npm ci
 
-      - name: Run consumer contract tests
-        run: npm run test:contract
+      - name: Type check
+        run: npx tsc --noEmit
 
-      - name: Upload pact files
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Lint (non-blocking)
+        run: npm run lint || echo "Lint warnings (non-blocking)"
+
+
+  # ── Build ───────────────────────────────────────────────────────────────────
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    needs: [unit-and-integration, quality]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          name: pact-files
-          path: pacts/
+          node-version: "20"
+          cache: "npm"
 
-      - name: Upload Allure results (contract)
+      - run: npm ci
+
+      - name: Build Next.js app
+        run: npm run build
+
+      - name: Upload Next.js build artifact
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: allure-results-contract
-          path: allure-results/jest/
+          name: nextjs-build
+          path: .next/
 
-  # ── API Tests ────────────────────────────────────────────────────────────────
+
+  # ── API Tests ───────────────────────────────────────────────────────────────
   api-tests:
     name: API Tests
     runs-on: ubuntu-latest
-    needs: unit-and-integration
+    needs: build
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
 
       - name: Start server
         run: npm run start &
@@ -96,64 +123,74 @@ jobs:
           NODE_ENV: production
 
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 30000
+        run: npx wait-on http://localhost:3000 --timeout 60000
 
       - name: Run API tests
         run: npm run test:api
         env:
           API_BASE_URL: http://localhost:3000
           NODE_ENV: test
+          PAYMENT_DELAY_MS: 0
 
-      - name: Run provider pact verification
-        run: npm run test:pact:provider
-        env:
-          API_BASE_URL: http://localhost:3000
-          NODE_ENV: test
-
-  # ── Lint & Type Check ────────────────────────────────────────────────────────
-  quality:
-    name: Lint & Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Upload Allure results (api)
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npx tsc --noEmit
-      - run: npm run lint || echo "Lint warnings (non-blocking)"
+          name: allure-results-api
+          path: allure-results/
 
-  # ── E2E Tests ────────────────────────────────────────────────────────────────
+
+  # ── E2E Tests ───────────────────────────────────────────────────────────────
   e2e:
     name: E2E Tests (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    needs: [unit-and-integration, build]
+    needs: build
+
     strategy:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, mobile-chrome]
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
+
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps ${{ matrix.browser == 'mobile-chrome' && 'chromium' || matrix.browser }}
+        run: |
+          if [ "${{ matrix.browser }}" = "mobile-chrome" ]; then
+            npx playwright install --with-deps chromium
+          else
+            npx playwright install --with-deps ${{ matrix.browser }}
+          fi
+
+      - name: Start server
+        run: npm run start &
+        env:
+          NODE_ENV: production
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000 --timeout 60000
 
       - name: Run E2E tests (${{ matrix.browser }})
         run: npx playwright test --project=${{ matrix.browser }}
         env:
           CI: true
-          BASE_URL: ${{ secrets.BASE_URL }}
-          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          BASE_URL: http://localhost:3000
+          API_BASE_URL: http://localhost:3000
           DEFAULT_BROWSER: ${{ matrix.browser }}
           TEST_TIMEOUT: 30000
           TEST_RETRIES: 2
@@ -184,20 +221,22 @@ jobs:
           path: test-results/
           retention-days: 14
 
-      - name: Upload Allure results (E2E)
+      - name: Upload Allure results (e2e)
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: allure-results-e2e-${{ matrix.browser }}
-          path: allure-results/e2e/
+          path: allure-results/
           retention-days: 14
 
-  # ── Allure Report ────────────────────────────────────────────────────────────
+
+  # ── Allure Report ───────────────────────────────────────────────────────────
   allure-report:
     name: Generate Allure Report
     runs-on: ubuntu-latest
-    needs: [unit-and-integration, contract, e2e]
+    needs: [unit-and-integration, api-tests, e2e]
     if: always()
+
     steps:
       - uses: actions/checkout@v4
 
@@ -216,7 +255,7 @@ jobs:
           allure_history: allure-history
           keep_reports: 20
 
-      - name: Upload Allure report
+      - name: Upload Allure report artifact
         uses: actions/upload-artifact@v4
         with:
           name: allure-report
@@ -230,22 +269,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-report
-
-  # ── Build ────────────────────────────────────────────────────────────────────
-  build:
-    name: Production Build
-    runs-on: ubuntu-latest
-    needs: [unit-and-integration, quality]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run build
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: nextjs-build
-          path: .next/

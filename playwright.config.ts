@@ -17,7 +17,7 @@ const defaultBrowser = process.env.DEFAULT_BROWSER || 'chromium'
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? retries : 0,
   workers: process.env.CI ? 1 : workers,

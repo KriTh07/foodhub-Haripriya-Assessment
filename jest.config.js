@@ -1,13 +1,15 @@
 /** @type {import('jest').Config} */
 const sharedTransform = {
   '^.+\\.(ts|tsx|js)$': ['ts-jest', {
-    tsconfig: { jsx: 'react', module: 'commonjs', moduleResolution: 'node' }
+    tsconfig: { jsx: 'react', module: 'commonjs', moduleResolution: 'node', esModuleInterop: true }
   }]
 }
 
-const sharedTransformIgnorePatterns = ['node_modules/(?!(uuid)/)']
-
 const sharedModuleNameMapper = { '^@/(.*)$': '<rootDir>/src/$1' }
+
+const sharedTransformIgnorePatterns = [
+  'node_modules/(?!(uuid)/)',
+]
 
 const allureReporter = ['jest-allure2-reporter', {
   resultsDir: 'allure-results/jest',

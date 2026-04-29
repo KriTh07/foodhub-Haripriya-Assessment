@@ -182,7 +182,7 @@ export default function App() {
 
             <div className={styles.categoryBar} role="tablist" aria-label="Menu categories">
               {CATEGORIES.map(c => (
-                <button key={c.id} role="tab" aria-selected={category === c.id} className={`${styles.catBtn} ${category === c.id ? styles.catActive : ''}`} onClick={() => setCategory(c.id)} data-testid={`category-${c.id}`}>
+                <button key={c.id} role="tab" aria-selected={category === c.id} aria-label={c.label} className={`${styles.catBtn} ${category === c.id ? styles.catActive : ''}`} onClick={() => setCategory(c.id)} data-testid={`category-${c.id}`}>
                   <span>{c.emoji}</span> {c.label}
                 </button>
               ))}
@@ -202,7 +202,7 @@ export default function App() {
                     )}
                     <div className={styles.cardBody}>
                       <div className={styles.cardTop}>
-                        <h3 className={styles.cardName}>{item.name}</h3>
+                        <h2 className={styles.cardName}>{item.name}</h2>
                         {!item.available && <span className={styles.unavailableBadge}>Sold out</span>}
                       </div>
                       <p className={styles.cardDesc}>{item.description}</p>
@@ -242,6 +242,7 @@ export default function App() {
         {/* ── CART ── */}
         {step === 'cart' && (
           <div className={styles.cartView} data-testid="cart-page">
+            <h1 className={styles.srOnly}>Cart</h1>
             <div className={styles.pageHeader}>
               <button className={styles.backBtn} onClick={() => setStep('menu')} data-testid="back-to-menu">← Menu</button>
               <h2>Your Order</h2>
@@ -254,7 +255,7 @@ export default function App() {
               </div>
             ) : (
               <>
-                <ul className={styles.cartList} data-testid="cart-items">
+                <ul className={styles.cartList} role="list" data-testid="cart-items">
                   {cart.map(item => (
                     <li key={item.menuItem.id} className={styles.cartItem} data-testid={`cart-item-${item.menuItem.id}`}>
                       <span className={styles.cartEmoji}>{item.menuItem.imageEmoji}</span>
