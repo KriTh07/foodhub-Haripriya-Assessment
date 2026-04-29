@@ -1,5 +1,4 @@
 name: CI
-
 on:
   push:
     branches: [main, develop]
@@ -65,7 +64,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Lint
-        run: npm run lint || true # Don't fail the build on lint errors, just report them
+        run: npm run lint || true
 
 
   # ── Build ───────────────────────────────────────────────────────────────────
@@ -87,15 +86,23 @@ jobs:
       - name: Build Next.js app
         run: npm run build
 
-      - name: Check build output exists
-        run: ls -la .next
+      - name: Verify build output
+        run: |
+          if [ ! -d ".next" ]; then
+            echo "Build failed — .next directory not found"
+            exit 1
+          fi
+          ls -la .next/
+
+      - name: Archive build
+        run: tar -czf nextjs-build.tar.gz .next
 
       - name: Upload Next.js build artifact
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: nextjs-build
-          path: |
-            .next/**
+          path: nextjs-build.tar.gz
 
 
   # ── API Tests ───────────────────────────────────────────────────────────────
@@ -115,14 +122,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build app
-        run: npm run build
+      - name: Download Next.js build
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+
+      - name: Extract build
+        run: |
+          if [ ! -f nextjs-build.tar.gz ]; then
+            echo "Build artifact missing — did the build job succeed?"
+            exit 1
+          fi
+          tar -xzf nextjs-build.tar.gz
 
       - name: Start server
         run: npm run start &
-
         env:
           NODE_ENV: production
+          PORT: 3000
 
       - name: Wait for server
         run: npx wait-on http://localhost:3000 --timeout 60000
@@ -133,6 +150,10 @@ jobs:
           API_BASE_URL: http://localhost:3000
           NODE_ENV: test
           PAYMENT_DELAY_MS: 0
+
+      - name: Stop server
+        if: always()
+        run: pkill -f "next start" || true
 
       - name: Upload Allure results (api)
         uses: actions/upload-artifact@v4
@@ -165,8 +186,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build app
-        run: npm run build
+      - name: Download Next.js build
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+
+      - name: Extract build
+        run: |
+          if [ ! -f nextjs-build.tar.gz ]; then
+            echo "Build artifact missing — did the build job succeed?"
+            exit 1
+          fi
+          tar -xzf nextjs-build.tar.gz
 
       - name: Install Playwright browsers
         run: |
@@ -180,16 +211,17 @@ jobs:
         run: npm run start &
         env:
           NODE_ENV: production
+          PORT: 3001
 
       - name: Wait for server
-        run: npx wait-on http://localhost:3000 --timeout 60000
+        run: npx wait-on http://localhost:3001 --timeout 60000
 
       - name: Run E2E tests (${{ matrix.browser }})
         run: npx playwright test --project=${{ matrix.browser }}
         env:
           CI: true
-          BASE_URL: http://localhost:3000
-          API_BASE_URL: http://localhost:3000
+          BASE_URL: http://localhost:3001
+          API_BASE_URL: http://localhost:3001
           DEFAULT_BROWSER: ${{ matrix.browser }}
           TEST_TIMEOUT: 30000
           TEST_RETRIES: 2
@@ -203,6 +235,10 @@ jobs:
           VALID_CARD: ${{ secrets.VALID_CARD }}
           DECLINED_CARD: ${{ secrets.DECLINED_CARD }}
           INSUFFICIENT_FUNDS_CARD: ${{ secrets.INSUFFICIENT_FUNDS_CARD }}
+
+      - name: Stop server
+        if: always()
+        run: pkill -f "next start" || true
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
