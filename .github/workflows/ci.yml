@@ -136,7 +136,9 @@ jobs:
           tar -xzf nextjs-build.tar.gz
 
       - name: Start server
-        run: npm run start &
+        run: |
+          npm run start -- -p 3000 &
+          echo $! > server.pid
         env:
           NODE_ENV: production
           PORT: 3000
@@ -153,7 +155,11 @@ jobs:
 
       - name: Stop server
         if: always()
-        run: pkill -f "next start" || true
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+            rm server.pid
+          fi
 
       - name: Upload Allure results (api)
         uses: actions/upload-artifact@v4
@@ -208,7 +214,9 @@ jobs:
           fi
 
       - name: Start server
-        run: npm run start &
+        run: |
+          npm run start -- -p 3001 &
+          echo $! > server.pid
         env:
           NODE_ENV: production
           PORT: 3001
@@ -238,7 +246,11 @@ jobs:
 
       - name: Stop server
         if: always()
-        run: pkill -f "next start" || true
+        run: |
+          if [ -f server.pid ]; then
+            kill $(cat server.pid) || true
+            rm server.pid
+          fi
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
