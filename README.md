@@ -382,7 +382,7 @@ No conversational UI to guide customers through the ordering flow. In production
 - Highlights current promotions and discounts ("20% off pizzas today!")
 - Surfaces new menu items ("Try our new Vegan Burger")
 - Recommends popular choices based on order history ("Most customers pair the Burger with Lemonade")
-- Answers FAQs ("Free delivery on orders over £30")
+- Answers FAQs ("Free delivery on orders over ₹500")
 
 This would improve conversion rates and reduce support tickets. Not included because conversational AI requires intent training data, NLU model tuning, and integration with a backend knowledge base — significant scope beyond a test strategy demo.
 
