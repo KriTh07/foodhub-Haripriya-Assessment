@@ -7,7 +7,7 @@
 
 ## What This Document Covers
 
-This is a plain-English summary of how we test the Grub ordering system, what we are confident about, what we are not, and what we need before we can ship to real customers.
+This document provies a summary of how we test the Grub ordering system, what we are confident about, what we are not, and what we need before we can ship to real customers.
 
 ---
 
@@ -22,7 +22,7 @@ We test the system at four levels, each catching a different type of problem.
 | API tests | The full HTTP layer — routing, error codes, response shapes | ~30 seconds |
 | Browser tests | Real user journeys in Chrome, Firefox, and mobile Chrome | ~5 minutes |
 
-**Total automated test count: 100+ tests across all levels.**
+**Total automated test count: 110+ tests across all levels.**
 
 The browser tests cover the complete customer journey end to end:
 

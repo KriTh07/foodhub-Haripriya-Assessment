@@ -14,6 +14,9 @@ const enableScreenshots = process.env.ENABLE_SCREENSHOTS !== 'false'
 const enableVideo = process.env.ENABLE_VIDEO !== 'false'
 const enableTracing = process.env.ENABLE_TRACING !== 'false'
 const defaultBrowser = process.env.DEFAULT_BROWSER || 'chromium'
+const allureResultsDir = process.env.ALLURE_RESULTS_DIR || 'allure-results/e2e'
+const playwrightHtmlReport = process.env.PLAYWRIGHT_HTML_REPORT || 'playwright-report'
+const playwrightJsonOutput = process.env.PLAYWRIGHT_JSON_OUTPUT || 'test-results/results.json'
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -23,11 +26,12 @@ export default defineConfig({
   workers: process.env.CI ? 1 : workers,
   timeout: testTimeout,
 
+ 
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['allure-playwright', { outputFolder: 'allure-results/e2e', detail: true }],
-    ['json', { outputFile: 'test-results/results.json' }]
+    ['html', { outputFolder: 'playwrightHtmlReport', open: 'never' }],
+    ['allure-playwright', { outputFolder: 'allureResultsDir', detail: true }],
+    ['json', { outputFile: 'playwrightJsonOutput' }]
   ],
 
   use: {

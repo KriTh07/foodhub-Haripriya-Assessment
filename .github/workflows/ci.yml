@@ -24,10 +24,14 @@ jobs:
         run: npm ci
 
       - name: Run unit tests
-        run: npm run test:unit -- --coverage --allure-results=allure-results/unit
+        run: npm run test:unit -- --coverage
+        env:
+          ALLURE_RESULTS_DIR: allure-results/unit
 
       - name: Run integration tests
-        run: npm run test:integration --allure-results=allure-results/integration
+        run: npm run test:integration
+        env:
+          ALLURE_RESULTS_DIR: allure-results/integration
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
@@ -146,8 +150,9 @@ jobs:
         run: npx wait-on http://localhost:3000 --timeout 60000
 
       - name: Run API tests
-        run: npm run test:api --allure-results=allure-results/api
+        run: npm run test:api
         env:
+          ALLURE_RESULTS_DIR: allure-results/api 
           API_BASE_URL: http://localhost:3000
           NODE_ENV: test
           PAYMENT_DELAY_MS: 0
@@ -224,12 +229,13 @@ jobs:
         run: npx wait-on http://localhost:3001 --timeout 60000
 
       - name: Run E2E tests (${{ matrix.browser }})
-        run: npx playwright test --project=${{ matrix.browser }} --output=allure-results/e2e-${{ matrix.browser }}
+        run: npx playwright test --project=${{ matrix.browser }}
         env:
           CI: true
           BASE_URL: http://localhost:3001
           API_BASE_URL: http://localhost:3001
           DEFAULT_BROWSER: ${{ matrix.browser }}
+          ALLURE_RESULTS_DIR: allure-results/e2e-${{ matrix.browser }}
           TEST_TIMEOUT: 30000
           TEST_RETRIES: 2
           TEST_WORKERS: 1
@@ -283,29 +289,43 @@ jobs:
     needs: [unit-and-integration, api-tests, e2e]
     if: always()
     permissions:
-      contents: write   # ← required for gh-pages push
+      contents: write # Needed for pushing to gh-pages
       pages: write
       id-token: write
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all Allure results
+      - name: Download unit+integration results
         uses: actions/download-artifact@v4
         with:
-          pattern: allure-results-*
+          name: allure-results-unit-integration
           path: allure-results-combined/
-          merge-multiple: true          
+        continue-on-error: true
+
+      - name: Download API results
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-api
+          path: allure-results-combined/
+        continue-on-error: true
+
+      - name: Download E2E results (chromium)
+        uses: actions/download-artifact@v4
+        with:
+          name: allure-results-e2e-chromium
+          path: allure-results-combined/
+        continue-on-error: true
+
       - name: Restore Allure history
         run: |
-            git clone --branch gh-pages https://github.com/${{ github.repository }} gh-pages || true
-            mkdir -p allure-history
-
-            if [ -d "gh-pages/history" ]; then
-              cp -r gh-pages/history allure-history/
-            else
-              echo "No previous history found (first run)"
-            fi
+          git clone --branch gh-pages https://github.com/${{ github.repository }} gh-pages || true
+          mkdir -p allure-history
+          if [ -d "gh-pages/history" ]; then
+            cp -r gh-pages/history allure-history/
+          else
+            echo "No previous history found (first run)"
+          fi
 
       - name: Generate Allure report
         uses: simple-elf/allure-report-action@master

@@ -440,7 +440,7 @@ Most teams start with E2E tests because they look like the real thing. However, 
 
 ## AI Use
 
-Amazon Q was used throughout this project as a reviewer and gap-finder:
+Amazon Q was used this project as a reviewer and gap-finder:
 
 - Identifying the truncated E2E spec, absent logging, and no API test layer
 - Generating edge cases for payment validation, cart quantity limits, and delivery threshold boundary conditions
