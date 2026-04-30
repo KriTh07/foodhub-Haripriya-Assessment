@@ -2,8 +2,14 @@ name: CI
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - '**.md'         # any markdown file
+      - 'docs/**'       # docs folder
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'         # any markdown file
+      - 'docs/**'       # docs folder
 
 jobs:
   # ── Unit & Integration Tests ────────────────────────────────────────────────

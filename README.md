@@ -98,89 +98,6 @@ package.json                 # Dependencies and test scripts
 ```
 
 ---
-**Test cards:**
-
-| Number | Outcome |
-|---|---|
-| `4242 4242 4242 4242` | Payment succeeds |
-| `4000 0000 0000 0002` | Card declined by issuer |
-| `4000 0000 0000 9995` | Insufficient funds |
-| Any past expiry date | Card expired |
-
----
-
-## Commandline References
-
-### Commands to deploy/start the application
-
-```bash
-npm install
-npm run dev        # Start app at http://localhost:3000
-```
-
-### Commands for Running Tests
-
-
-```bash
-npm run test:unit          # 47 unit tests — pure functions, ~3s
-npm run test:integration   # 15 integration tests — API handlers, ~5s
-npm test                   # Unit + integration together
-
-npm run test:e2e           # Full Playwright suite — all browsers
-npm run test:e2e:smoke     # Critical path only (@smoke)
-npm run test:e2e:a11y      # Accessibility tests (WCAG 2.1 AA)
-npm run test:e2e:ui        # Playwright UI mode for local debugging
-
-npm run test:all           # Local equivalent to full pipeline
-```
-
-### Test Reporting
-#### Allure reporting (requires `npm install -g allure-commandline`)
-```bash
-# Install Allure CLI (one-time)
-npm install -g allure-commandline
-
-# Generate report from pipeline results
-npm run allure:generate      # Build from allure-results/
-
-npm run allure:open          # Open report in default browser
-npm run allure:serve         # Serve report with live updates
-```
-
-**Set `PAYMENT_DELAY_MS=0` in your test environment** to eliminate the simulated 800ms payment processing delay from API and integration test runs.
-
-
----
-
-## Viewing Test Reports
-
-### Live Allure Report (GitHub Pages)
-The E2E test report is published automatically on every push to `main`:
-🔗 https://krith07.github.io/foodhub-Haripriya-Assessment/
-
-### Per-Run Artifacts (All Test Layers)
-Every CI run uploads the following artifacts, accessible via:
-`Actions → latest run → Artifacts (scroll to bottom)`
-
-| Artifact | Contents | How to View |
-|---|---|---|
-| `allure-report` | Allure HTML dashboard (E2E) | `npx serve allure-report` or `allure open` |
-| `allure-results-e2e-chromium` | Raw E2E Allure results (JSON/XML) | Feed into any Allure CLI |
-| `allure-results-api` | Raw API test results | Feed into any Allure CLI |
-| `allure-results-unit-integration` | Raw unit + integration results | Feed into any Allure CLI |
-| `playwright-report-chromium` | Full Playwright HTML report with traces | `npx playwright show-report playwright-report` |
-| `test-results-chromium` | Screenshots and videos on failure | Open directly in browser |
-| `coverage-report` | Jest unit test coverage | Open `lcov-report/index.html` |
-
-### Known Reporting Gap — and Why
-The published GitHub Pages report currently shows E2E results only.
-Jest (unit/integration/API) and Playwright write Allure results to separate directories across separate CI jobs. Merging them into a single unified report requires either:
-- A shared external store (S3, GCS) to collect results across jobs, or
-- A single-job pipeline that sacrifices parallelism, or
-- A cross-runner reporter like CTRF that natively aggregates multiple formats
-
-All individual results **are** captured as artifacts and are fully inspectable per run. A unified single-pane report is the next infrastructure improvement.
----
 
 Application has been developed keeping in mind: **what would make this system easy to test at every layer?**
 
@@ -299,7 +216,7 @@ The pipeline (`ci.yml`) ensures the app is **deployed first**, then all tests ru
 3. **Deploy App** → Start server (required both for API tests and E2E)
 4. **Run All Tests** → Only after deployment succeeds
    - API tests against deployed server
-   - E2E tests (Chrome, Firefox, Mobile)
+   - E2E tests (supports Chrome, Firefox, Mobile)
    - Accessibility Tests
 5. **Generate Reports** → Allure unified report
 6. **Publish to GitHub Pages** → On main branch only
@@ -465,6 +382,91 @@ Most teams start with E2E tests because they look like the real thing. However, 
 - Integration tests → api tests → regression suite
 - Follow Test Pyramid Structure: unit tests build confidence, integration tests clarify boundaries, E2E becomes safety net
 - Don't introduce Pact to a team that's never written a unit test
+
+---
+
+**Test cards:**
+
+| Number | Outcome |
+|---|---|
+| `4242 4242 4242 4242` | Payment succeeds |
+| `4000 0000 0000 0002` | Card declined by issuer |
+| `4000 0000 0000 9995` | Insufficient funds |
+| Any past expiry date | Card expired |
+
+---
+
+## Commandline References
+
+### Commands to deploy/start the application
+
+```bash
+npm install
+npm run dev        # Start app at http://localhost:3000
+```
+
+### Commands for Running Tests
+
+
+```bash
+npm run test:unit          # 47 unit tests — pure functions, ~3s
+npm run test:integration   # 15 integration tests — API handlers, ~5s
+npm test                   # Unit + integration together
+
+npm run test:e2e           # Full Playwright suite — all browsers
+npm run test:e2e:smoke     # Critical path only (@smoke)
+npm run test:e2e:a11y      # Accessibility tests (WCAG 2.1 AA)
+npm run test:e2e:ui        # Playwright UI mode for local debugging
+
+npm run test:all           # Local equivalent to full pipeline
+```
+
+### Test Reporting
+#### Allure reporting (requires `npm install -g allure-commandline`)
+```bash
+# Install Allure CLI (one-time)
+npm install -g allure-commandline
+
+# Generate report from pipeline results
+npm run allure:generate      # Build from allure-results/
+
+npm run allure:open          # Open report in default browser
+npm run allure:serve         # Serve report with live updates
+```
+
+**Set `PAYMENT_DELAY_MS=0` in your test environment** to eliminate the simulated 800ms payment processing delay from API and integration test runs.
+
+
+---
+
+## Viewing Test Reports
+
+### Live Allure Report (GitHub Pages)
+The E2E test report is published automatically on every push to `main`:
+🔗 https://krith07.github.io/foodhub-Haripriya-Assessment/
+
+### Per-Run Artifacts (All Test Layers)
+Every CI run uploads the following artifacts, accessible via:
+`Actions → latest run → Artifacts (scroll to bottom)`
+
+| Artifact | Contents | How to View |
+|---|---|---|
+| `allure-report` | Allure HTML dashboard (E2E) | `npx serve allure-report` or `allure open` |
+| `allure-results-e2e-chromium` | Raw E2E Allure results (JSON/XML) | Feed into any Allure CLI |
+| `allure-results-api` | Raw API test results | Feed into any Allure CLI |
+| `allure-results-unit-integration` | Raw unit + integration results | Feed into any Allure CLI |
+| `playwright-report-chromium` | Full Playwright HTML report with traces | `npx playwright show-report playwright-report` |
+| `test-results-chromium` | Screenshots and videos on failure | Open directly in browser |
+| `coverage-report` | Jest unit test coverage | Open `lcov-report/index.html` |
+
+### Known Reporting Gap — and Why
+The published GitHub Pages report currently shows E2E results only.
+Jest (unit/integration/API) and Playwright write Allure results to separate directories across separate CI jobs. Merging them into a single unified report requires either:
+- A shared external store (S3, GCS) to collect results across jobs, or
+- A single-job pipeline that sacrifices parallelism, or
+- A cross-runner reporter like CTRF that natively aggregates multiple formats
+
+All individual results **are** captured as artifacts and are fully inspectable per run. A unified single-pane report is the next infrastructure improvement.
 
 ---
 
